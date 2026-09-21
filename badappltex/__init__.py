@@ -7,6 +7,12 @@ from .formulas import (
     FormulaFamily,
     FormulaGenerationError,
 )
+from .rendering import (
+    FormulaRenderError,
+    MathTextRasterizer,
+    RenderedFormula,
+    RenderStyle,
+)
 
 __all__ = [
     "ArithmeticConfig",
@@ -14,4 +20,8 @@ __all__ = [
     "Formula",
     "FormulaFamily",
     "FormulaGenerationError",
+    "FormulaRenderError",
+    "MathTextRasterizer",
+    "RenderedFormula",
+    "RenderStyle",
 ]
