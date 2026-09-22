@@ -74,16 +74,40 @@ print(result.core_coverage_fraction, result.outside_ink_pixels)
 Placement checks every nontransparent glyph pixel against the silhouette and
 keeps configurable spacing between formula ink masks.
 
-Generate a black-on-white PNG preview from the command line:
+Generate a single black-on-white formula preview from the command line:
 
 ```console
 uv run python -m badappltex --output preview.png --seed 42 --font-size 18
 ```
 
-This small CLI intentionally exposes only the formula and rasterization
-controls that exist today; placement and video options will be added with those
-stages. A packaged console-script entry point can be added when the CLI grows
-beyond this development preview.
+Fill the dark regions of a source image with formulas:
+
+```console
+uv run python -m badappltex \
+  --input source.png \
+  --output formula-silhouette.png \
+  --seed 42 \
+  --font-size 8 \
+  --formula-count 300
+```
+
+Image mode also accepts `--threshold`, `--gap`, and `--placement-attempts` for
+the controls already implemented by the core pipeline. A packaged
+console-script entry point can be added when the CLI grows beyond this
+development preview.
+
+A ready-to-use test silhouette is included at
+`examples/test-silhouette.png`:
+
+```console
+uv run python -m badappltex \
+  --input examples/test-silhouette.png \
+  --output preview.png \
+  --seed 42 \
+  --font-size 8 \
+  --formula-count 350 \
+  --placement-attempts 400
+```
 
 Run the tests with:
 

@@ -20,6 +20,11 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.seed, 0)
         self.assertEqual(args.font_size, 16.0)
         self.assertEqual(args.dpi, 100.0)
+        self.assertIsNone(args.input)
+        self.assertEqual(args.formula_count, 250)
+        self.assertEqual(args.threshold, 127)
+        self.assertEqual(args.gap, 1)
+        self.assertEqual(args.placement_attempts, 256)
 
     def test_cli_writes_black_on_white_png_and_reports_formula(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -75,6 +80,75 @@ class CliTests(unittest.TestCase):
                 with redirect_stderr(io.StringIO()):
                     with self.assertRaises(SystemExit) as raised:
                         main(["-o", "unused.png", option, "0"])
+                self.assertEqual(raised.exception.code, 2)
+
+    def test_image_mode_preserves_dimensions_and_contains_all_ink(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            source_path = Path(directory) / "source.png"
+            output_path = Path(directory) / "result.png"
+            source = np.full((120, 180), 255, dtype=np.uint8)
+            source[10:110, 20:160] = 0
+            Image.fromarray(source).save(source_path)
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--input",
+                        str(source_path),
+                        "--output",
+                        str(output_path),
+                        "--seed",
+                        "42",
+                        "--font-size",
+                        "7",
+                        "--formula-count",
+                        "80",
+                        "--gap",
+                        "0",
+                        "--placement-attempts",
+                        "500",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            with Image.open(output_path) as result_image:
+                result = np.asarray(result_image)
+                self.assertEqual(result.shape, source.shape)
+
+            ink = result < 255
+            self.assertTrue(np.any(ink))
+            self.assertTrue(np.all(source[ink] <= 127))
+            report = stdout.getvalue()
+            self.assertIn("formulas: placed=", report)
+            self.assertIn("coverage: core=", report)
+            self.assertIn("outside=0", report)
+
+    def test_missing_input_image_is_a_parser_error(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing.png"
+            output = Path(directory) / "unused.png"
+
+            with redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    main(["--input", str(missing), "--output", str(output)])
+
+            self.assertEqual(raised.exception.code, 2)
+            self.assertFalse(output.exists())
+
+    def test_image_mode_integer_options_are_validated(self) -> None:
+        invalid_options = (
+            ("--formula-count", "0"),
+            ("--threshold", "256"),
+            ("--gap", "-1"),
+            ("--placement-attempts", "0"),
+        )
+
+        for option, value in invalid_options:
+            with self.subTest(option=option):
+                with redirect_stderr(io.StringIO()):
+                    with self.assertRaises(SystemExit) as raised:
+                        main(["-o", "unused.png", option, value])
                 self.assertEqual(raised.exception.code, 2)
 
 
