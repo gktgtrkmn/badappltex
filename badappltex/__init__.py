@@ -13,6 +13,14 @@ from .rendering import (
     RenderedFormula,
     RenderStyle,
 )
+from .masking import Silhouette, SilhouetteConfig, SilhouetteExtractor
+from .placement import (
+    FormulaPlacer,
+    PlacedFormula,
+    PlacementConfig,
+    PlacementResult,
+    compose_on_white,
+)
 
 __all__ = [
     "ArithmeticConfig",
@@ -24,4 +32,12 @@ __all__ = [
     "MathTextRasterizer",
     "RenderedFormula",
     "RenderStyle",
+    "Silhouette",
+    "SilhouetteConfig",
+    "SilhouetteExtractor",
+    "FormulaPlacer",
+    "PlacedFormula",
+    "PlacementConfig",
+    "PlacementResult",
+    "compose_on_white",
 ]

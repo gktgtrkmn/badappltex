@@ -39,6 +39,41 @@ The support mask contains every antialiased glyph pixel and is intended for
 strict silhouette containment. The core mask contains pixels at or above the
 configured alpha threshold and is intended for coverage measurements.
 
+Convert an OpenCV frame into a placement silhouette:
+
+```python
+from badappltex.masking import SilhouetteConfig, SilhouetteExtractor
+
+silhouette = SilhouetteExtractor().extract(
+    frame,
+    SilhouetteConfig(threshold=127, blur_radius_px=1),
+)
+print(silhouette.foreground_fraction)
+```
+
+Boolean `True` pixels represent regions where formula ink may be placed.
+Three- and four-channel frames are interpreted as OpenCV-style BGR and BGRA.
+
+Place pre-rendered formulas inside a silhouette and compose a white frame:
+
+```python
+import random
+
+from badappltex.placement import FormulaPlacer, PlacementConfig, compose_on_white
+
+result = FormulaPlacer().place(
+    silhouette,
+    rendered_formulas,
+    random.Random(42),
+    PlacementConfig(attempts_per_formula=128, gap_px=1),
+)
+frame = compose_on_white(result)
+print(result.core_coverage_fraction, result.outside_ink_pixels)
+```
+
+Placement checks every nontransparent glyph pixel against the silhouette and
+keeps configurable spacing between formula ink masks.
+
 Generate a black-on-white PNG preview from the command line:
 
 ```console
